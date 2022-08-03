@@ -1,6 +1,8 @@
 import { providers } from "ethers";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { toast, TypeOptions } from 'react-toastify';
 import { Button, Divider } from "semantic-ui-react";
+import {v4 as uuid} from  'uuid'
 import contract, { Loan } from "../blockchain/loan-contract";
 import tokenContract from "../blockchain/USDCToken";
 
@@ -15,11 +17,13 @@ export default function PendingLoan({
   currentAddress,
 }: Props) {
   const [loading, setLoading] = useState(false);
+  const toastRef = useRef<any>(null)
   async function approveContractToSendTokens() {
     try {
       if (!provider) throw new Error("Your are not connected to Metamask");
 
       setLoading(true);
+      showToast('Please wait... Your Transaction is being processed', undefined, true)
       const signer = provider.getSigner(currentAddress);
       const netToken = pendingLoan!.tokenAmount - pendingLoan!.allowance;
       await tokenContract.approveContract(
@@ -27,11 +31,21 @@ export default function PendingLoan({
         netToken,
         signer
       );
-    } catch (error) {
-      console.log(error);
-    } finally {
       setLoading(false);
+      showToast('Transaction intiated! Please wait for some minutes. Before you can repay you loan', 'success', false)
+    } catch (error: any) {
+      showToast(JSON.parse(JSON.stringify(error.message)),'error', false)
     }
+  }
+  function showToast(message: string, type?: TypeOptions, isLoading?: boolean ){
+    if (!toastRef.current){
+      toastRef.current = toast(message, { isLoading, type, autoClose: false  })
+      return
+    }
+    
+    const newId = uuid()
+    toast.update(toastRef.current, { type, autoClose: 5000, isLoading, render: message, toastId: newId})
+    toastRef.current = newId
   }
   async function repayLoanHandler() {
     try {
@@ -39,8 +53,9 @@ export default function PendingLoan({
       setLoading(true);
       const signer = provider.getSigner(currentAddress);
       await contract.repayYourLoan(currentAddress, signer);
+      showToast(`Transaction Success! ${pendingLoan?.tokenAmount} USDC is on it way`, 'success', false)
     } catch (error: any) {
-      console.log(error.message);
+      showToast(JSON.parse(JSON.stringify(error.message)),'error', false)
     } finally {
       setLoading(false);
     }

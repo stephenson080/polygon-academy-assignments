@@ -1,6 +1,8 @@
 import { Modal, Form, Container, Icon, Button } from "semantic-ui-react";
-import { useState } from "react";
+import { useState,useRef } from "react";
 import { create } from "ipfs-http-client";
+import { toast, TypeOptions } from 'react-toastify';
+import {v4 as uuid} from  'uuid'
 
 import contract from "../blockchain/media-contract";
 import { providers } from "ethers";
@@ -39,6 +41,18 @@ export default function AddPost({
     title: "",
     imageHash: "",
   });
+  const toastRef = useRef<any>(null)
+
+  function showToast(message: string, type?: TypeOptions, isLoading?: boolean ){
+    if (!toastRef.current){
+      toastRef.current = toast(message, { isLoading, type, autoClose: false  })
+      return
+    }
+    
+    const newId = uuid()
+    toast.update(toastRef.current, { type, autoClose: 5000, isLoading, render: message, toastId: newId})
+    toastRef.current = newId
+  }
 
   async function addPost(){
     try {
@@ -54,15 +68,16 @@ export default function AddPost({
       const signer = provider.getSigner(currentAddress)
       await contract.addNewPost(state.title, state.imageHash, signer)
       contract.getAllPost()
+      showToast('Transaction Success! Your assets is on it way', 'success', false)
       setUistate({...uiState, loading: false})
     } catch (error : any) {
-      console.log(error.message)
+      showToast(JSON.parse(JSON.stringify(error.message)),'error', false)
     }
   }
 
   return (
     <Modal size="small" dimmer open={showModal}>
-      <Modal.Header style={{ backgroundColor: "blue", color: "white" }}>
+      <Modal.Header style={{ backgroundColor: "purple", color: "white" }}>
         {" "}
         <Icon
           loading={uiState.loading}

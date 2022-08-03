@@ -3,11 +3,12 @@ import USDCTokenABI from "../contracts/UDSCABI.json";
 
 class USDCToken {
   contract;
+  address = '0xe11A86849d99F524cAC3E7A0Ec1241828e332C62'
 
   constructor() {
     const provider = new providers.Web3Provider(window.ethereum!);
     this.contract = new Contract(
-      "0xe11A86849d99F524cAC3E7A0Ec1241828e332C62",
+      this.address,
       USDCTokenABI,
       provider
     );

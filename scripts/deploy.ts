@@ -10,6 +10,8 @@ async function main() {
   
   await loanContractInstance.deployed()
 
+  console.log("Contract deployed to: ", loanContractInstance.address)
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere

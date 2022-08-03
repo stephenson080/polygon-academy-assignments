@@ -16,36 +16,40 @@ export default function Header({
 }: Props) {
   const location = useLocation();
   return (
-    <Container>
-      <Menu secondary stackable>
-        <Link  to ='#'>
-        <Menu.Item name="Polygon Academy Task 2" />
+    <Menu inverted stackable>
+      <Container>
+        <Link to="/wallet">
+          <Menu.Item as="h3" name="Polygon Academy" />
         </Link>
-        
+
         <Link to="/wallet">
           <Menu.Item
+            as="h3"
             name="Wallet"
             active={location.pathname === "/wallet" && true}
           />
         </Link>
-        
-        <Link to='/loan'>
-        <Menu.Item
-          name="Get Loan"
-          active={location.pathname === "/loan" && true}
-        />
+
+        <Link to="/loan">
+          <Menu.Item
+            as="h3"
+            name="Get Loan"
+            active={location.pathname === "/loan" && true}
+          />
         </Link>
-        <Link to='/media'>
-        <Menu.Item
-          name="Blog"
-          active={location.pathname === "/media" && true}
-        />
+        <Link to="/media">
+          <Menu.Item
+            as="h3"
+            name="Blog"
+            active={location.pathname === "/media" && true}
+          />
         </Link>
 
         <Menu.Menu position="right">
-          <Menu.Item color={isConnected ? "green" : "orange"}>
-            {isConnected ? `${currentAcct.slice(0, 8)}..., Your Bal: ${accountBal} matic`
-              : "No Wallet Connected"}
+          <Menu.Item as="h3">
+            <strong style={{color: isConnected ? "#7CFC00" : "white"}}>{isConnected
+              ? `${currentAcct.slice(0, 8)}..., Your Bal: ${accountBal} matic`
+              : "No Wallet Connected"}</strong>
           </Menu.Item>
           <Menu.Item>
             <Button
@@ -56,7 +60,7 @@ export default function Header({
             </Button>
           </Menu.Item>
         </Menu.Menu>
-      </Menu>
-    </Container>
+      </Container>
+    </Menu>
   );
 }

@@ -11,7 +11,7 @@ export type Loan = {
 
 class LoanContract {
   contract;
-  address = "0x4884ad275aBf41B795d1d898a96C6758eFfe5d1B";
+  address = "0x68CF6bC9d1D3e6EBF7803450D67922320824b409";
   constructor() {
     const provider = new providers.Web3Provider(window.ethereum!);
     this.contract = new Contract(this.address, LoanABI.abi, provider);

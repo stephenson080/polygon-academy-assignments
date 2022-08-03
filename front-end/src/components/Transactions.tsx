@@ -26,7 +26,7 @@ export default function AllTransactions({ allTrxs }: Props) {
         {allTrxs.length === 0 ? (
           <h3>You have no Transaction yet</h3>
         ) : (
-          <Table singleLine fixed style={{ width: "85%" }} celled>
+          <Table singleLine fixed style={{ width: "90%", boxShadow: 'rgba(149, 157, 165, 0.2) 0px 8px 24px' }} celled>
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell width={2}>S/N</Table.HeaderCell>

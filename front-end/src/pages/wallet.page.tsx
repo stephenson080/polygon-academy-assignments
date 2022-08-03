@@ -1,7 +1,9 @@
 import "../App.css";
-import { Input, Container } from "semantic-ui-react";
+import { Button, Container, Form } from "semantic-ui-react";
+import { toast, TypeOptions } from 'react-toastify';
+import {v4 as uuid} from  'uuid'
 import { providers, utils } from "ethers";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import ErrorModal from "../components/ErrorModal";
 import AllTransactions, { Transaction } from "../components/Transactions";
 import Header from "../components/Header";
@@ -19,23 +21,24 @@ interface TransactionData {
 }
 
 function WalletPage() {
-  const [currentAcct, setCurrentAcct] = useState<string>('');
+  const [currentAcct, setCurrentAcct] = useState<string>("");
   const [provider, setProvider] = useState<providers.Web3Provider>();
   const [isConnected, setIsConnected] = useState(false);
   const [showError, setShowError] = useState(false);
   const [accountBal, setAccountBal] = useState("0.00");
   const [loading, setLoading] = useState(false);
+  const toastRef = useRef<any>(null)
   const [trxData, setTrxdata] = useState<TransactionData>({
     amount: "",
     receiverAdd: "",
   });
   const [allTrxs, setAlltrxs] = useState<Transaction[]>([]);
 
-  const checkNetwork = useCallback( async () => {
-    if (!provider){
+  const checkNetwork = useCallback(async () => {
+    if (!provider) {
       setShowError(true);
       setIsConnected(false);
-      return
+      return;
     }
     const network = await provider.detectNetwork();
     if (network.name !== "maticmum") {
@@ -47,7 +50,7 @@ function WalletPage() {
       setIsConnected(true);
       setShowError(false);
     }
-  }, [provider])
+  }, [provider]);
 
   useEffect(() => {
     if (window.ethereum) {
@@ -70,6 +73,7 @@ function WalletPage() {
         const trxs: string[] = JSON.parse(existingTrx);
         for (let t of trxs) {
           const res = await provider!.getTransaction(t);
+          if (!res) continue
           const trx: Transaction = {
             hash: res.hash,
             from: res.from,
@@ -77,13 +81,15 @@ function WalletPage() {
             to: res.to ? res.to : "",
             value: res.value ? utils.formatEther(res.value) : "0.00",
           };
+          
           trxState.push(trx);
+          
         }
-        setAlltrxs(trxState);
+        
+        setAlltrxs([...trxState]);
       }
     } catch (error) {}
   }, [isConnected, provider]);
-
   const setAcctBal = useCallback(async () => {
     try {
       if (isConnected) {
@@ -98,38 +104,36 @@ function WalletPage() {
 
   useEffect(() => {
     getTransactions();
-  }, [isConnected, getTransactions]);
+  }, [isConnected]);
 
   useEffect(() => {
     setAcctBal();
   }, [isConnected, setAcctBal]);
 
-  
-
   async function autoConnect() {
     try {
-      const {provider, currentAddress} = await autoConnectWallet()
-      setProvider(provider)
-      setCurrentAcct(currentAddress)
+      const { provider, currentAddress } = await autoConnectWallet();
+      setProvider(provider);
+      setCurrentAcct(currentAddress);
 
-      setIsConnected(true)
+      setIsConnected(true);
     } catch (error: any) {
       setIsConnected(false);
-      setShowError(true)
+      setShowError(true);
     }
   }
   function disconnect() {
     if (isConnected) {
-      setIsConnected(false)
-      setCurrentAcct('')
-      setAccountBal('0.0')
-      return
+      setIsConnected(false);
+      setCurrentAcct("");
+      setAccountBal("0.0");
+      return;
     }
     getConnection();
   }
   async function getConnection() {
     try {
-      const {provider, currentAddress} = await connectWallet();
+      const { provider, currentAddress } = await connectWallet();
 
       setProvider(provider);
       setCurrentAcct(currentAddress);
@@ -137,13 +141,14 @@ function WalletPage() {
       setShowError(false);
     } catch (error: any) {
       setIsConnected(false);
-      setShowError(true)
+      setShowError(true);
     }
   }
 
   async function makeTransaction() {
     try {
       setLoading(true);
+      showToast('Please wait... Your Transaction is being processed', undefined, true)
       const signer = provider!.getSigner(currentAcct);
       const res = await signer.sendTransaction({
         to: trxData.receiverAdd,
@@ -157,19 +162,32 @@ function WalletPage() {
       trans.push(res.hash);
       localStorage.setItem("trxs", JSON.stringify(trans));
       getTransactions();
+      showToast('Transaction Success! Your assets is on it way', 'success', false)
       setTrxdata({ amount: "", receiverAdd: "" });
+      
     } catch (error: any) {
-      alert(error.message);
+      showToast(JSON.parse(JSON.stringify(error.message)),'error', false)
     } finally {
       setAcctBal();
       setLoading(false);
     }
   }
+
+  function showToast(message: string, type?: TypeOptions, isLoading?: boolean ){
+    if (!toastRef.current){
+      toastRef.current = toast(message, { isLoading, type, autoClose: false  })
+      return
+    }
+    
+    const newId = uuid()
+    toast.update(toastRef.current, { type, autoClose: 5000, isLoading, render: message, toastId: newId})
+    toastRef.current = newId
+  }
   if (showError) {
     return <ErrorModal retry={getConnection} />;
   }
   return (
-    <div className="App">
+    <div style={{ backgroundColor: "whitesmoke" }}>
       <Header
         isConnected={isConnected}
         accountBal={accountBal}
@@ -185,40 +203,57 @@ function WalletPage() {
           <div>
             <div
               style={{
-                marginTop: "30px",
+                width: "90%",
+                margin: "20px auto",
+                maxWidth: "380px",
+                padding: "20px",
+                backgroundColor: "white",
                 display: "flex",
                 flexDirection: "column",
+                boxShadow: "rgba(149, 157, 165, 0.2) 0px 8px 24px",
+                borderRadius: "10px",
               }}
             >
               <h3 style={{ textAlign: "left" }}>Make A Transaction</h3>
-              <Input
-                label={{ basic: false, content: "Address" }}
-                labelPosition="right"
-                placeholder="Enter Address..."
-                style={{ width: "35%", margin: "15px 0" }}
-                value={trxData.receiverAdd}
-                onChange={(e) =>
-                  setTrxdata({ ...trxData, receiverAdd: e.target.value })
-                }
-              />
-              <Input
-                action={{
-                  color: "purple",
-                  labelPosition: "right",
-                  icon: "send",
-                  content: "Send",
-                  onClick: () => makeTransaction(),
-                }}
-                actionPosition="left"
-                placeholder="Enter Amount in ether"
-                style={{ width: "35%", margin: "15px 0" }}
-                value={trxData.amount}
-                onChange={(e) =>
-                  setTrxdata({ ...trxData, amount: e.target.value })
-                }
-                loading={loading}
-                disabled={loading}
-              />
+              <Form
+                style={{ marginTop: "20px" }}
+                // error={uiState.error}
+              >
+                <Form.Input
+                  // error={uiState.titleError}
+                  required
+                  type="text"
+                  style={{ width: "100%" }}
+                  label="Receiver's Address"
+                  size="big"
+                  placeholder="Enter Address..."
+                  value={trxData.receiverAdd}
+                  onChange={(e) =>
+                    setTrxdata({ ...trxData, receiverAdd: e.target.value })
+                  }
+                />
+                <Form.Input
+                  // error={uiState.titleError}
+                  required
+                  type="text"
+                  style={{ width: "100%" }}
+                  label="Amount"
+                  size="big"
+                  placeholder="Enter Amount in Matic"
+                  value={trxData.amount}
+                  onChange={(e) =>
+                    setTrxdata({ ...trxData, amount: e.target.value })
+                  }
+                />
+                <Button
+                  disabled={loading}
+                  color='purple'
+                  fluid
+                  onClick={makeTransaction}
+                >
+                  Transact
+                </Button>
+              </Form>
             </div>
             <AllTransactions allTrxs={allTrxs} />
           </div>

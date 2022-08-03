@@ -1,10 +1,20 @@
 import { BrowserRouter } from "react-router-dom";
 import AppRouter from "./router/route";
+import { ToastContainer } from "react-toastify";
 
-export default function App(){
+import "react-toastify/dist/ReactToastify.css";
+
+export default function App() {
   return (
     <BrowserRouter>
-      <AppRouter currentAddress=''/>
+      <ToastContainer
+        closeButton={true}
+        closeOnClick={true}
+        pauseOnFocusLoss={true}
+        theme="colored"
+        enableMultiContainer={false}
+      />
+      <AppRouter currentAddress="" />
     </BrowserRouter>
-  )
+  );
 }
