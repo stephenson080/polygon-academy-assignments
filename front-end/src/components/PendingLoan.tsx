@@ -10,11 +10,13 @@ type Props = {
   pendingLoan: Loan | null;
   provider: providers.Web3Provider | undefined;
   currentAddress: string;
+  onRefresh: () => void
 };
 export default function PendingLoan({
   pendingLoan,
   provider,
   currentAddress,
+  onRefresh
 }: Props) {
   const [loading, setLoading] = useState(false);
   const toastRef = useRef<any>(null)
@@ -32,6 +34,7 @@ export default function PendingLoan({
         signer
       );
       setLoading(false);
+      onRefresh()
       showToast('Transaction intiated! Please wait for some minutes. Before you can repay you loan', 'success', false)
     } catch (error: any) {
       showToast(JSON.parse(JSON.stringify(error.message)),'error', false)
@@ -53,6 +56,7 @@ export default function PendingLoan({
       setLoading(true);
       const signer = provider.getSigner(currentAddress);
       await contract.repayYourLoan(currentAddress, signer);
+      onRefresh()
       showToast(`Transaction Success! ${pendingLoan?.tokenAmount} USDC is on it way`, 'success', false)
     } catch (error: any) {
       showToast(JSON.parse(JSON.stringify(error.message)),'error', false)
@@ -62,7 +66,7 @@ export default function PendingLoan({
   }
   if (!pendingLoan) return null;
   return (
-    <div style={{ margin: "20px 0", backgroundColor: "white", padding: 20 }}>
+    <div style={{ margin: "20px 0", backgroundColor: "white", padding: 20, boxShadow: "rgba(149, 157, 165, 0.2) 0px 8px 24px", borderRadius: '10px' }}>
       <div
         style={{
           display: "flex",
@@ -73,6 +77,10 @@ export default function PendingLoan({
         }}
       >
         <h3>Pending Loan</h3>
+        <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+          <Button basic color="purple" onClick={() => onRefresh()}>
+            Refresh
+          </Button>
         <Button
           onClick={() =>
             pendingLoan.allowance - pendingLoan.tokenAmount
@@ -87,6 +95,8 @@ export default function PendingLoan({
             ? "Approve Token"
             : "Repay Loan"}
         </Button>
+        </div>
+        
       </div>
       <Divider />
       <div style={{ margin: "20px 0" }}>

@@ -12,6 +12,7 @@ type Props = {
   rate: number;
   provider: providers.Web3Provider;
   closeModal: () => void;
+  refresh: () => void
 };
 interface UIState {
   tokenError: boolean;
@@ -30,6 +31,7 @@ export default function RequestLoan({
   rate,
   closeModal,
   provider,
+  refresh
 }: Props) {
   const [uiState, setUistate] = useState<UIState>({
     loading: false,
@@ -101,6 +103,7 @@ export default function RequestLoan({
         +state.tokenAmount,
         signer
       );
+      refresh()
       setUistate({
         ...uiState,
         readyToAddToken: true,

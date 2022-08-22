@@ -10,6 +10,7 @@ import usdcContract from "../blockchain/USDCToken";
 import LoanContractMetaData from "../components/LoanContract";
 import RequestLoan from "../components/RequestLoan";
 import PendingLoan from "../components/PendingLoan";
+import LoaderPlaceholder from "../components/LoadingPlaceholder";
 
 type LoanContractMeta = {
   rate: number;
@@ -23,7 +24,7 @@ export default function LoanPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [showError, setShowError] = useState(false);
   const [accountBal, setAccountBal] = useState("0.00");
-  //   const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [metaData, setMetaData] = useState<LoanContractMeta>({
     rate: 0,
@@ -72,16 +73,25 @@ export default function LoanPage() {
       autoConnect();
     }
   }, []);
-  
-  const  setLoanContractData = useCallback(async () =>{
+
+  function refresh() {
+    setLoanContractData();
+    setAcctBal();
+  }
+
+  const setLoanContractData = useCallback(async () => {
     try {
+      setLoading(true);
       let tokenAllowance = 0.0;
       const rate = await contract.getRate();
       const pendingLoan = await contract.getPendingLoan(currentAcct);
       const tokenBal = await usdcContract.getBalanceOf(contract.address);
-      if(pendingLoan){
-        tokenAllowance = await usdcContract.getAllowance(currentAcct, contract.address)
-        pendingLoan.allowance = tokenAllowance
+      if (pendingLoan) {
+        tokenAllowance = await usdcContract.getAllowance(
+          currentAcct,
+          contract.address
+        );
+        pendingLoan.allowance = tokenAllowance;
       }
       setMetaData({
         ...metaData,
@@ -90,8 +100,10 @@ export default function LoanPage() {
         tokenBalance: tokenBal,
       });
     } catch (error: any) {
+    } finally {
+      setLoading(false);
     }
-  }, [currentAcct, metaData])
+  }, [currentAcct, metaData]);
 
   useEffect(() => {
     if (currentAcct === "") return;
@@ -117,8 +129,8 @@ export default function LoanPage() {
   function disconnect() {
     if (isConnected) {
       setIsConnected(false);
-      setCurrentAcct('')
-      setAccountBal('0.0')
+      setCurrentAcct("");
+      setAccountBal("0.0");
       return;
     }
     getConnection();
@@ -141,8 +153,27 @@ export default function LoanPage() {
       setShowError(true);
     }
   }
+
+  function renderRequestBtn() {
+    if (loading) {
+      return <LoaderPlaceholder />;
+    }
+
+    return (
+      !metaData.pendingLoan && (
+        <div style={{ margin: "30px 0", display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+          <Button basic color="purple" onClick={() => refresh()}>
+              Refresh
+            </Button>
+          <Button color="purple" onClick={() => setShowModal(true)}>
+            Request A Loan Now
+          </Button>
+        </div>
+      )
+    );
+  }
   return (
-    <div>
+    <div style={{ backgroundColor: "whitesmoke" }}>
       <Header
         isConnected={isConnected}
         accountBal={accountBal}
@@ -157,7 +188,9 @@ export default function LoanPage() {
           </h1>
         ) : (
           <div style={{ margin: "30px 0" }}>
+            
             <RequestLoan
+              refresh={refresh}
               currentAddress={currentAcct}
               rate={metaData.rate}
               showModal={showModal}
@@ -168,19 +201,12 @@ export default function LoanPage() {
               <Grid.Row>
                 <Grid.Column largeScreen={10} mobile={16}>
                   <PendingLoan
+                    onRefresh={refresh}
                     currentAddress={currentAcct}
                     provider={provider}
                     pendingLoan={metaData.pendingLoan}
                   />
-                  <div style={{ margin: "30px 0" }}>
-                    <Button
-                      disabled={metaData.pendingLoan ? true : false}
-                      color="purple"
-                      onClick={() => setShowModal(true)}
-                    >
-                      Request A Loan Now
-                    </Button>
-                  </div>
+                  {renderRequestBtn()}
                 </Grid.Column>
                 <Grid.Column largeScreen={6} mobile={16}>
                   <LoanContractMetaData

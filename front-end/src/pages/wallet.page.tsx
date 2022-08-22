@@ -256,6 +256,7 @@ function WalletPage() {
               </Form>
             </div>
             <AllTransactions allTrxs={allTrxs} />
+            <h1></h1>
           </div>
         )}
       </Container>

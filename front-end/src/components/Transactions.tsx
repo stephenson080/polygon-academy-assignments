@@ -16,7 +16,7 @@ export default function AllTransactions({ allTrxs }: Props) {
   return (
     <div
       style={{
-        marginTop: "30px",
+        margin: "30px",
         display: "flex",
         flexDirection: "column",
       }}

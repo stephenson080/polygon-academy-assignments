@@ -4,10 +4,12 @@ import { create } from "ipfs-http-client";
 import { toast, TypeOptions } from 'react-toastify';
 import {v4 as uuid} from  'uuid'
 
+import fleek from '@fleekhq/fleek-storage-js';
+
 import contract from "../blockchain/media-contract";
 import { providers } from "ethers";
 
-const ipfs = create({ host: "ipfs.infura.io", port: 5001, protocol: "https" });
+const ipfs = create({host: 'ipfs.fleek.co', protocol: 'https'});
 
 // https://bafybeifqjhez52nnxgcdggtsekl2b6e7mtb5npmsbmnicsqult2pewwlwq.ipfs.infura-ipfs.io/
 
@@ -21,6 +23,7 @@ interface UIState {
   titleError: boolean;
   loading: boolean;
   imageError: boolean;
+  uploadingFile: boolean
 }
 interface State {
   title: string;
@@ -36,6 +39,7 @@ export default function AddPost({
     loading: false,
     imageError: false,
     titleError: false,
+    uploadingFile: false
   });
   const [state, setState] = useState<State>({
     title: "",
@@ -67,8 +71,7 @@ export default function AddPost({
       setUistate({...uiState, loading: true})
       const signer = provider.getSigner(currentAddress)
       await contract.addNewPost(state.title, state.imageHash, signer)
-      contract.getAllPost()
-      showToast('Transaction Success! Your assets is on it way', 'success', false)
+      showToast('Transaction Success! Your post is being uploaded', 'success', false)
       setUistate({...uiState, loading: false})
     } catch (error : any) {
       showToast(JSON.parse(JSON.stringify(error.message)),'error', false)
@@ -122,23 +125,37 @@ export default function AddPost({
             <Form.Input
               error={uiState.imageError}
               required
+              loading={uiState.uploadingFile}
               type="file"
               style={{ width: "100%" }}
               label="Image"
               size="big"
               placeholder="upload you image"
               onChange={async (e) => {
-                if (!e.target.files) {
+                try {
+                  if (!e.target.files) {
                   
-                  return;
+                    return;
+                  }
+                  if (e.target.files.length <= 0) {
+                    return;
+                  }
+                  const file = e.target.files[0];
+                  const input = {
+                    apiKey: process.env.REACT_APP_API_KEY!,
+                    apiSecret: process.env.REACT_APP_API_SECRET!,
+                    key: `my-folder/${file.name}`,
+                    data: file,
+                  };
+                  setUistate({...uiState, uploadingFile: true})
+                  const uploadFile = await fleek.upload(input)
+                  setState({...state, imageHash: uploadFile.hash})
+                  setUistate({...uiState, imageError: false, uploadingFile: false})
+                }catch(err: any){
+                  showToast(err.message, 'error', false)
+                  setUistate({...uiState, imageError: true, uploadingFile: false})
                 }
-                if (e.target.files.length <= 0) {
-                  return;
-                }
-                const file = e.target.files[0];
-                const uploadFile = await ipfs.add(file)
-                setState({...state, imageHash: uploadFile.cid.toV1().toString()})
-                setUistate({...uiState, imageError: false})
+                
               }}
             />
           </Form>
@@ -146,14 +163,17 @@ export default function AddPost({
       </Modal.Content>
       <Modal.Actions>
         <Button
-          disabled={uiState.loading ? true : false}
+          disabled={uiState.loading || uiState.uploadingFile ? true : false}
           negative
-          onClick={closeModal}
+          onClick={() => {
+            setState({title: '', imageHash: ''})
+            closeModal()
+          }}
         >
           Cancel
         </Button>
         <Button
-          disabled={uiState.loading ? true : false}
+          disabled={uiState.loading || uiState.uploadingFile ? true : false}
           positive
           onClick={addPost}
         >

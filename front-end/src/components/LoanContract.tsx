@@ -6,7 +6,7 @@ type Props = {
 }
 export default function LoanContractMetaData({rate, tokenBal}: Props) {
   return (
-    <Card style={{margin: '30px 0'}}>
+    <Card style={{margin: '30px 0', boxShadow: "rgba(149, 157, 165, 0.2) 0px 8px 24px"}}>
       <Card.Content header="About Our Loan" />
       <Card.Content description={`Our Loan Contract has about ${tokenBal} USDC Token `} />
       <Card.Content extra>

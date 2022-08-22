@@ -9,12 +9,14 @@ import contract, { Post } from "../blockchain/media-contract";
 import { autoConnectWallet, connectWallet } from "../blockchain/utils";
 import AddPost from "../components/AddPost";
 import PostCard from "../components/Post";
+import LoaderPlaceholder from "../components/LoadingPlaceholder";
 
 export default function MediaPage() {
   const [currentAcct, setCurrentAcct] = useState<string>("");
   const [provider, setProvider] = useState<providers.Web3Provider>();
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingPost, setLoadingPost] = useState(false);
   const [showError, setShowError] = useState(false);
   const [accountBal, setAccountBal] = useState("0.00");
   const [posts, setPosts] = useState<Post[]>([]);
@@ -57,6 +59,9 @@ export default function MediaPage() {
       window.ethereum.on("chainChanged", (chainId: string) => {
         checkNetwork();
       });
+      window.ethereum.on("message", (message: any) => {
+        console.log(message);
+      });
       autoConnect();
     }
   }, []);
@@ -95,10 +100,13 @@ export default function MediaPage() {
 
   async function getAllPostsHandler() {
     try {
+      setLoadingPost(true);
       const fetchedPosts = await contract.getAllPost();
       setPosts(fetchedPosts);
+      setLoadingPost(false);
     } catch (error: any) {
       console.log(error.message);
+      setLoadingPost(false);
     }
   }
 
@@ -130,6 +138,17 @@ export default function MediaPage() {
       console.log(error.message);
     }
   }
+  function renderPosts() {
+    if (loadingPost) {
+      return <LoaderPlaceholder />;
+    }
+    if (posts.length <= 0) {
+      return <h2>No Post to display</h2>;
+    }
+    return posts.map((post) => (
+      <PostCard likePost={likePostById} key={post.id} post={post} />
+    ));
+  }
 
   return (
     <div style={{ backgroundColor: "whitesmoke" }}>
@@ -148,10 +167,11 @@ export default function MediaPage() {
           <div
             style={{
               width: "90%",
-              margin: "20px auto",
+              margin: "30px auto",
               maxWidth: "650px",
               padding: "20px",
               backgroundColor: "white",
+              boxShadow: "rgba(149, 157, 165, 0.2) 0px 8px 24px",
             }}
           >
             <AddPost
@@ -175,19 +195,31 @@ export default function MediaPage() {
               }}
             >
               <h3>All Feeds</h3>
-              <div style={{ marginLeft: "auto" }}>
+              <div
+                style={{
+                  marginLeft: "auto",
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-around",
+                }}
+              >
+                <Button
+                  basic
+                  onClick={() => getAllPostsHandler()}
+                  color="purple"
+                >
+                  Refresh Posts
+                </Button>
                 <Button onClick={() => setShowModal(true)} color="purple">
                   Add New Post
                 </Button>
               </div>
             </div>
-            <div>
-              {posts.map((post) => (
-                <PostCard likePost={likePostById} key={post.id} post={post} />
-              ))}
-            </div>
+            <div>{renderPosts()}</div>
           </div>
         )}
+        <h1></h1>
       </Container>
     </div>
   );
