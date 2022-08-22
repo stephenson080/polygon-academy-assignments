@@ -7,6 +7,10 @@
   pointer-events: none;
 }
 
+.ty {
+  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
