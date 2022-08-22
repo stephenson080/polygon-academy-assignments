@@ -27,10 +27,10 @@ Then,
     npm install
 ```
 
-in the front-end folder, you can open up the loan-contract.ts and media-contract.ts files under src/blockchain folder and exchange the address class field with your deployed contracts for the loan and social-media contracts respectively. Or, you can use the addresses assigned to then by default.
+in the front-end folder, you can open up the loan-contract.ts and media-contract.ts files under src/blockchain folder and exchange the address class field with your deployed contract's addresses for the loan and social-media contracts respectively. Or, you can use the addresses assigned to then by default.
 
 Next, still in the front-end folder, run:
 
 ```shell
-    npm  // to start-up frontend code
+    npm start // to start-up frontend code
 ```
