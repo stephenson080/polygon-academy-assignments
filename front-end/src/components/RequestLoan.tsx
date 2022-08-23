@@ -188,7 +188,7 @@ export default function RequestLoan({
               value={state.tokenAmount}
               onChange={(e) => {
                 const numberReG = new RegExp("/^[0-9]+$/");
-                if (numberReG.test(e.target.value)) {
+                if (!numberReG.test(e.target.value)) {
                   setUistate({ ...uiState, tokenError: true });
                   return;
                 }
