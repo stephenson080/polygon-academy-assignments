@@ -1,6 +1,5 @@
 import { Modal, Form, Container, Icon, Button } from "semantic-ui-react";
 import { useState,useRef } from "react";
-import { create } from "ipfs-http-client";
 import { toast, TypeOptions } from 'react-toastify';
 import {v4 as uuid} from  'uuid'
 
@@ -9,9 +8,6 @@ import fleek from '@fleekhq/fleek-storage-js';
 import contract from "../blockchain/media-contract";
 import { providers } from "ethers";
 
-const ipfs = create({host: 'ipfs.fleek.co', protocol: 'https'});
-
-// https://bafybeifqjhez52nnxgcdggtsekl2b6e7mtb5npmsbmnicsqult2pewwlwq.ipfs.infura-ipfs.io/
 
 type Props = {
   showModal: boolean;
