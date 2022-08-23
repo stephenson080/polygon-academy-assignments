@@ -11,6 +11,7 @@ type Props = {
   currentAddress: string;
   rate: number;
   provider: providers.Web3Provider;
+  contractTokenBal: number
   closeModal: () => void;
   refresh: () => void
 };
@@ -31,7 +32,8 @@ export default function RequestLoan({
   rate,
   closeModal,
   provider,
-  refresh
+  refresh,
+  contractTokenBal
 }: Props) {
   const [uiState, setUistate] = useState<UIState>({
     loading: false,
@@ -174,6 +176,7 @@ export default function RequestLoan({
                 setUistate({ ...uiState, addressError: false });
               }}
             />
+            <h5>Amount of Token in Loan Contract: {contractTokenBal}</h5>
             <Form.Input
               error={uiState.tokenError}
               required
@@ -190,6 +193,16 @@ export default function RequestLoan({
                   return;
                 }
                 const collateral = +e.target.value / rate;
+                if (+e.target.value > contractTokenBal){
+                  setUistate({ ...uiState, tokenError: true });
+                  setState({
+                    ...state,
+                    tokenAmount: e.target.value,
+                    collateral: collateral.toString().slice(0, 10),
+                  });
+                  return;
+                }
+                
                 setState({
                   ...state,
                   tokenAmount: e.target.value,

@@ -190,6 +190,7 @@ export default function LoanPage() {
           <div style={{ margin: "30px 0" }}>
             
             <RequestLoan
+              contractTokenBal={metaData.tokenBalance}
               refresh={refresh}
               currentAddress={currentAcct}
               rate={metaData.rate}
