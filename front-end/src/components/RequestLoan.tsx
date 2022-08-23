@@ -187,9 +187,15 @@ export default function RequestLoan({
               placeholder="enter Token"
               value={state.tokenAmount}
               onChange={(e) => {
-                const numberReG = new RegExp("/^[0-9]+$/");
+                const numberReG = new RegExp("^[0-9]+$");
+                console.log(numberReG.test(e.target.value))
                 if (!numberReG.test(e.target.value)) {
                   setUistate({ ...uiState, tokenError: true });
+                  setState({
+                    ...state,
+                    tokenAmount: e.target.value,
+                    collateral: '0',
+                  });
                   return;
                 }
                 const collateral = +e.target.value / rate;
